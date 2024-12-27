@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>폭탄 피하기 게임</title>
+    <style>
+        @font-face {
+            font-family: 'DNFBitBit';
+            src: url('https://raw.githubusercontent.com/yunrang2/upload/refs/heads/master/DNFBitBitv2.ttf') format('truetype');
+        }
+        body {
+            font-family: 'DNFBitBit', Arial, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            transition: background-color 0.3s;
+            overflow: hidden;
+        }
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            gap: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .box {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #e0e0e0, #c0c0c0);
+            border: 2px solid #aaa;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+        .box:hover {
+            background: radial-gradient(circle, #f0f0f0, #e0e0e0);
+            transform: scale(1.1);
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .hidden {
+            visibility: hidden;
+        }
+        .bomb {
+            color: red;
+            font-weight: bold;
+            animation: bombEffect 1s ease-in-out;
+        }
+        @keyframes bombEffect {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+        .status {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .restart-btn {
+            margin: 20px auto 0;
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0px 4px 10px rgba(255, 111, 97, 0.5);
+            transition: background-color 0.3s, transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .restart-btn.hidden {
+            display: none;
+        }
+        .restart-btn:hover {
+            background-color: #ff8a80;
+            transform: scale(1.1);
+        }
+        @keyframes flashBackground {
+            0% {
+                background: #ff0000;
+            }
+            50% {
+                background: #ffff00;
+            }
+            100% {
+                background: #ff0000;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="game-container" id="game-container">
+            <!-- 상자가 동적으로 생성됩니다 -->
+        </div>
+        <div class="status" id="status">폭탄을 피하세요! 3번의 기회가 있습니다.</div>
+        <div class="restart-btn hidden" id="restart-btn">다시 하기</div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById("game-container");
+        const statusDiv = document.getElementById("status");
+        const restartBtn = document.getElementById("restart-btn");
+
+        // 상자 및 게임 변수
+        const BOX_COUNT = 9;
+        const ATTEMPTS_ALLOWED = 3;
+        let attempts = 0;
+        let successfulAttempts = 0;
+        let bombIndices = [];
+
+        function initGame() {
+            // 초기화
+            gameContainer.innerHTML = "";
+            document.body.style.animation = "none";
+            statusDiv.textContent = "폭탄을 피하세요! 3번의 기회가 있습니다.";
+            restartBtn.classList.add("hidden");
+            attempts = 0;
+            successfulAttempts = 0;
+            bombIndices = [];
+
+            // 폭탄 위치 설정: 각 줄마다 하나씩 배치
+            for (let row = 0; row < 3; row++) {
+                let bombPosition;
+                do {
+                    bombPosition = row * 3 + Math.floor(Math.random() * 3);
+                } while (bombIndices.includes(bombPosition));
+                bombIndices.push(bombPosition);
+            }
+
+            // 상자 생성
+            for (let i = 0; i < BOX_COUNT; i++) {
+                const box = document.createElement("div");
+                box.classList.add("box");
+                box.dataset.index = i;
+                box.textContent = i + 1; // 번호 부여
+                box.addEventListener("click", () => handleClick(box));
+                gameContainer.appendChild(box);
+            }
+        }
+
+        function handleClick(box) {
+            const index = parseInt(box.dataset.index);
+
+            if (attempts >= ATTEMPTS_ALLOWED) {
+                statusDiv.textContent = "기회를 모두 소진했습니다. 게임 종료!";
+                revealAll();
+                endGame();
+                return;
+            }
+
+            attempts++;
+
+            if (bombIndices.includes(index)) {
+                box.innerHTML = "&#128163;"; // 폭탄 이모지
+                box.classList.add("bomb");
+                document.body.style.animation = "flashBackground 0.5s infinite";
+                setTimeout(() => {
+                    document.body.style.animation = "none";
+                }, 1000);
+                statusDiv.textContent = `폭탄을 찾았습니다! 게임 종료!`;
+                revealAll();
+                endGame();
+            } else {
+                box.innerHTML = "&#10060;"; // X 표시
+                box.classList.add("hidden");
+                successfulAttempts++;
+
+                if (successfulAttempts === 3) {
+                    statusDiv.textContent = "성공! 3번 모두 폭탄을 피했습니다!";
+                    revealAll();
+                    endGame();
+                } else {
+                    statusDiv.textContent = `잘했어요! 남은 기회: ${ATTEMPTS_ALLOWED - attempts}`;
+                }
+            }
+        }
+
+        function revealAll() {
+            const boxes = document.querySelectorAll(".box");
+            boxes.forEach((box) => {
+                const index = parseInt(box.dataset.index);
+                if (bombIndices.includes(index)) {
+                    box.innerHTML = "&#128163;";
+                    box.classList.add("bomb");
+                }
+            });
+        }
+
+        function endGame() {
+            const boxes = document.querySelectorAll(".box");
+            boxes.forEach((box) => {
+                box.style.pointerEvents = "none";
+            });
+            restartBtn.classList.remove("hidden");
+        }
+
+        restartBtn.addEventListener("click", initGame);
+
+        // 게임 초기화 실행
+        initGame();
+    </script>
+</body>
+</html>
