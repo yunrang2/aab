@@ -11,7 +11,7 @@
         }
         body {
             font-family: 'DNFBitBit', Arial, sans-serif;
-            background: linear-gradient(135deg, #000000, #bbbbbb);
+            background: linear-gradient(135deg, #000000, #b9b9b9);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -144,6 +144,9 @@
         let bombIndices = [];
         let selectedRows = new Set(); // 각 줄에서 선택을 추적
 
+        const successSound = new Audio('https://raw.githubusercontent.com/yunrang2/upload/refs/heads/master/YES.mp3');
+        const bombSound = new Audio('https://raw.githubusercontent.com/yunrang2/upload/refs/heads/master/Ugh.mp3');
+
         function initGame() {
             // 초기화
             gameContainer.innerHTML = "";
@@ -204,6 +207,7 @@
             attempts++;
 
             if (bombIndices.includes(index)) {
+                bombSound.play();
                 box.innerHTML = "&#128163;"; // 폭탄 이모지
                 box.classList.add("bomb");
                 document.body.style.animation = "flashBackground 0.5s infinite";
@@ -214,6 +218,7 @@
                 revealAll();
                 endGame();
             } else {
+                successSound.play();
                 box.innerHTML = "&#10060;"; // X 표시
                 box.classList.add("hidden");
                 successfulAttempts++;
