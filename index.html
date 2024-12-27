@@ -145,8 +145,8 @@
             successfulAttempts = 0;
             bombIndices = [];
 
-            // 폭탄 위치 설정: 각 줄마다 하나씩 배치
-            for (let row = 0; row < 3; row++) {
+            // 폭탄 위치 설정: 첫 번째와 두 번째 줄에 각 하나씩 배치
+            for (let row = 0; row < 2; row++) {
                 let bombPosition;
                 do {
                     bombPosition = row * 3 + Math.floor(Math.random() * 3);
@@ -154,12 +154,13 @@
                 bombIndices.push(bombPosition);
             }
 
-            // 추가 랜덤 폭탄 배치
-            let extraBomb;
-            do {
-                extraBomb = Math.floor(Math.random() * BOX_COUNT);
-            } while (bombIndices.includes(extraBomb));
-            bombIndices.push(extraBomb);
+            // 세 번째 줄에 두 개의 폭탄 배치
+            while (bombIndices.length < 4) {
+                let bombPosition = 6 + Math.floor(Math.random() * 3); // 세 번째 줄 범위: 6~8
+                if (!bombIndices.includes(bombPosition)) {
+                    bombIndices.push(bombPosition);
+                }
+            }
 
             // 상자 생성
             for (let i = 0; i < BOX_COUNT; i++) {
